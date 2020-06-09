@@ -1,6 +1,5 @@
 import cv2 
 import numpy as np 
-from functools import reduce 
 
 def sharpen(img):
 
@@ -16,7 +15,8 @@ def detect_faces(img, classifier_file):
 
     sharpened = sharpen(gray)
 
-    return face_cascade.detectMultiScale(sharpened, 1.2, 5)
+    return face_cascade.detectMultiScale(sharpened, 1.22, 3)
+
 
 def anonymize_face_pixelate(image, blocks=3):
     # divide the input image into NxN blocks
@@ -63,7 +63,7 @@ def main():
         face = img[y:y+h, x:x+w]
         face = anonymize_face_pixelate(face, 8)
         img[y:y+h, x:x+w] = face
-        #cv2.rectangle(img, (x, y), (x+w, y+h), (255, 0, 0), 2)
+        # cv2.rectangle(img, (x, y), (x+w, y+h), (255, 0, 0), 2)
     
     cv2.imshow('img', img)
     cv2.waitKey()
