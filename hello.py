@@ -1,5 +1,6 @@
 import cv2 
 import numpy as np 
+from functools import reduce 
 
 def anonymize_face_pixelate(image, blocks=3):
 	# divide the input image into NxN blocks
@@ -25,26 +26,30 @@ def anonymize_face_pixelate(image, blocks=3):
 	# return the pixelated blurred image
 	return image
 
-def main():
-
-    face_cascade = cv2.CascadeClassifier('data/haarcascades/haarcascade_frontalface_default.xml')
-    img = cv2.imread('lenna.png')
-
+def detect_faces(img, classifier_file):
+    face_cascade = cv2.CascadeClassifier(classifier_file)
+    
     # Convert to grayscale
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8,8))
-    cl1 = clahe.apply(gray)
+    return face_cascade.detectMultiScale(gray, 1.2, 5)
 
-    blur = cv2.GaussianBlur(cl1,(5,5),0)
-    smooth = cv2.addWeighted(blur,1.5,cl1,-0.5,0)
-
+def main():
+    img = cv2.imread('tmp_data/oscar.webp')
 
     # Detect faces 
-    faces = face_cascade.detectMultiScale(cl1, 1.2, 5)
+
+    cascades = [
+        'data/haarcascades/haarcascade_frontalface_default.xml',
+        'data/haarcascades/haarcascade_profileface.xml'
+    ]
+
+    faces = np.array([detect_faces(img, c) for c in cascades])
+    print(faces)
+    flattened = faces.flatten()
 
 
-    for (x, y, w, h) in faces:
+    for (x, y, w, h) in flattened:
 
         # pixelate faces 
         face = img[y:y+h, x:x+w]
@@ -52,7 +57,7 @@ def main():
         img[y:y+h, x:x+w] = face
         #cv2.rectangle(img, (x, y), (x+w, y+h), (255, 0, 0), 2)
     
-    cv2.imshow('img', smooth)
+    cv2.imshow('img', img)
     cv2.waitKey()
 
 
