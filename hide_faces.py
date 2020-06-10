@@ -1,5 +1,7 @@
 import cv2 
 import numpy as np 
+import sys 
+import argparse 
 
 def sharpen(img):
 
@@ -12,7 +14,6 @@ def detect_faces(img, classifier_file):
     
     # Convert to grayscale
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
     sharpened = sharpen(gray)
 
     return face_cascade.detectMultiScale(sharpened, 1.22, 3)
@@ -42,20 +43,14 @@ def anonymize_face_pixelate(image, blocks=3):
     # return the pixelated blurred image
     return image
 
-
-
-def main():
-    img = cv2.imread('tmp_data/splash_evelopegate.jpg')
-
+def hide_faces(input_filename, output_filename, cascades):
+    img = cv2.imread(input_filename)
+    
     # Detect faces 
-
-    cascades = [
-        'data/haarcascades/haarcascade_profileface.xml',
-        'data/haarcascades/haarcascade_frontalface_default.xml',
-    ]
-
     faces = np.array([detect_faces(img, c) for c in cascades])
-    flattened = np.concatenate(faces)
+    
+
+    flattened = np.concatenate([f for f in faces if len(f) > 0])
 
     for (x, y, w, h) in flattened:
 
@@ -64,10 +59,21 @@ def main():
         face = anonymize_face_pixelate(face, 8)
         img[y:y+h, x:x+w] = face
         # cv2.rectangle(img, (x, y), (x+w, y+h), (255, 0, 0), 2)
-    
-    cv2.imshow('img', img)
-    cv2.waitKey()
 
+    cv2.imwrite(output_filename, img)
+
+def main():
+
+    cascades = [
+        'data/haarcascades/haarcascade_profileface.xml',
+        'data/haarcascades/haarcascade_frontalface_default.xml',
+    ]
+
+    parser = argparse.ArgumentParser(description='hide some face')
+    parser.add_argument('input', help='input filename')
+    parser.add_argument('output', help='output filename')
+    args = parser.parse_args()
+    hide_faces(args.input, args.output, cascades)
 
 if __name__ == '__main__':
     main() 
