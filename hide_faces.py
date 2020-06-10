@@ -94,7 +94,7 @@ def hide_faces(input_filename, output_filename, cascades):
 
     for (x, y, w, h) in cleaned:
         pixelate(img, (x, y), (x+w, y+h), 8)
-        #cv2.rectangle(img, (x, y), (x+w, y+h), (255, 0, 0), 2)
+    
     cv2.imwrite(output_filename, img)
 
 def main():
