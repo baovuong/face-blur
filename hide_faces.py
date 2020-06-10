@@ -102,6 +102,7 @@ def main():
     cascades = [
         'data/haarcascades/haarcascade_profileface.xml',
         'data/haarcascades/haarcascade_frontalface_default.xml',
+        'data/lbpcascades/lbpcascade_frontalface_improved.xml'
     ]
 
     parser = argparse.ArgumentParser(description='hide some face')
