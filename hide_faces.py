@@ -3,6 +3,34 @@ import numpy as np
 import sys 
 import argparse 
 
+
+def area(w, h):
+    return w * h
+
+def perimeter(w, h):
+    return 2 * (w + h)
+
+def weight(box):
+    return area(box[2], box[3]) + perimeter(box[2], box[3])
+
+def encompassed_box(box1, box2):
+    
+    # (x, y, w, h)
+    x = [box1[0], box1[0] + box1[2], box2[0], box2[0] + box2[2]]
+    y = [box1[1], box1[1] + box1[3], box2[1], box2[1] + box2[3]]
+
+    p1 = (min(x), min(y))
+    p2 = (max(x), max(y))
+
+    return (p1[0], p1[1], abs(p1[0] - p2[0]), abs(p1[1] - p2[1]))
+
+def in_proximity(box1, box2):
+
+    # (x, y, w, h)
+    encompassed = encompassed_box(box1, box2)
+    en_weight = weight(encompassed) * 0.7
+    return en_weight <= weight(box1) or en_weight <= weight(box2)
+
 def sharpen(img):
 
     blurred = cv2.GaussianBlur(img, (0,0), 3)
@@ -16,8 +44,7 @@ def detect_faces(img, classifier_file):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     sharpened = sharpen(gray)
 
-    return face_cascade.detectMultiScale(sharpened, 1.22, 3)
-
+    return face_cascade.detectMultiScale(sharpened, 1.22, 2)
 
 def anonymize_face_pixelate(image, blocks=3):
     # divide the input image into NxN blocks
@@ -43,23 +70,31 @@ def anonymize_face_pixelate(image, blocks=3):
     # return the pixelated blurred image
     return image
 
+def pixelate(img, p1, p2, blocks=3):
+    face = img[p1[1]:p2[1], p1[0]:p2[0]]
+    face = anonymize_face_pixelate(face, blocks)
+    img[p1[1]:p2[1], p1[0]:p2[0]] = face
+
+
 def hide_faces(input_filename, output_filename, cascades):
     img = cv2.imread(input_filename)
     
     # Detect faces 
     faces = np.array([detect_faces(img, c) for c in cascades])
-    
-
     flattened = np.concatenate([f for f in faces if len(f) > 0])
 
-    for (x, y, w, h) in flattened:
+    # clean up
+    cleaned = set()
+    for f in flattened:
+        prox = sorted([g for g in flattened if in_proximity(f, g)], key=lambda x: weight(x))
+        if len(prox) > 0:
+            cleaned.add(tuple(prox[0]))
 
-        # pixelate faces 
-        face = img[y:y+h, x:x+w]
-        face = anonymize_face_pixelate(face, 8)
-        img[y:y+h, x:x+w] = face
-        # cv2.rectangle(img, (x, y), (x+w, y+h), (255, 0, 0), 2)
+    print('%s faces found.' % len(cleaned))
 
+    for (x, y, w, h) in cleaned:
+        pixelate(img, (x, y), (x+w, y+h), 8)
+        #cv2.rectangle(img, (x, y), (x+w, y+h), (255, 0, 0), 2)
     cv2.imwrite(output_filename, img)
 
 def main():
