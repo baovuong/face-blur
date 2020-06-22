@@ -1,8 +1,5 @@
 import cv2 
 import numpy as np 
-import sys 
-import argparse 
-
 
 def area(w, h):
     return w * h
@@ -90,26 +87,10 @@ def hide_faces(input_filename, output_filename, cascades):
         if len(prox) > 0:
             cleaned.add(tuple(prox[0]))
 
-    print('%s faces found.' % len(cleaned))
+    print('%s face%s found.' % (len(cleaned), 's' if len(cleaned) > 1 else ''))
 
     for (x, y, w, h) in cleaned:
         pixelate(img, (x, y), (x+w, y+h), 8)
     
     cv2.imwrite(output_filename, img)
 
-def main():
-
-    cascades = [
-        'data/haarcascades/haarcascade_profileface.xml',
-        'data/haarcascades/haarcascade_frontalface_default.xml',
-        'data/lbpcascades/lbpcascade_frontalface_improved.xml'
-    ]
-
-    parser = argparse.ArgumentParser(description='hide some face')
-    parser.add_argument('input', help='input filename')
-    parser.add_argument('output', help='output filename')
-    args = parser.parse_args()
-    hide_faces(args.input, args.output, cascades)
-
-if __name__ == '__main__':
-    main() 
