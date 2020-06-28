@@ -78,7 +78,8 @@ def hide_faces(input_filename, output_filename, cascades):
     
     # Detect faces 
     faces = np.array([detect_faces(img, c) for c in cascades])
-    flattened = np.concatenate([f for f in faces if len(f) > 0])
+    filtered = [f for f in faces if len(f) > 0]
+    flattened = np.concatenate(filtered) if len(filtered) > 0 else []
 
     # clean up
     cleaned = set()
@@ -89,8 +90,10 @@ def hide_faces(input_filename, output_filename, cascades):
 
     print('%s face%s found.' % (len(cleaned), 's' if len(cleaned) > 1 else ''))
 
-    for (x, y, w, h) in cleaned:
-        pixelate(img, (x, y), (x+w, y+h), 8)
+    if len(cleaned) > 0:
+        for (x, y, w, h) in cleaned:
+            pixelate(img, (x, y), (x+w, y+h), 8)
+        cv2.imwrite(output_filename, img)
     
-    cv2.imwrite(output_filename, img)
+    return len(cleaned)
 

@@ -141,3 +141,4 @@ cython_debug/
 .vscode 
 
 tmp_data/
+hidden_faces.db
