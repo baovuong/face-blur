@@ -2,6 +2,7 @@ import os
 from datetime import datetime, timedelta 
 import uuid 
 import mimetypes 
+import click 
 from flask import Flask, flash, request, redirect, url_for, send_file
 from flask_sqlalchemy import SQLAlchemy 
 import imghdr
@@ -22,8 +23,6 @@ app.config['TEMP_FOLDER'] = 'tmp_data/'
 app.config['OUTPUT_FOLDER'] = 'out/'
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///hidden_faces.db"
 db = SQLAlchemy(app)
-
-
 
 class ProcessedImage(db.Model):
     id = db.Column(db.String(32), primary_key=True)
@@ -47,6 +46,23 @@ class ProcessedImage(db.Model):
             'pub_date': self.pub_date.isoformat(),
             'exp_date': self.exp_date.isoformat()
         }
+
+@app.cli.command('setup')
+def setup():
+    # create tmp directory if not exists
+    if not os.path.exists(app.config['TEMP_FOLDER']):
+        print('creating temp folder')
+        os.makedirs(app.config['TEMP_FOLDER'])
+
+    # create out directory if not exists
+    if not os.path.exists(app.config['OUTPUT_FOLDER']):
+        print('creating output folder')
+        os.makedirs(app.config['OUTPUT_FOLDER'])
+
+    # create db if not exists
+    if not db.engine.has_table(ProcessedImage.__tablename__):
+        print('creating db')
+        db.create_all()
 
 
 @app.route('/')
@@ -75,7 +91,9 @@ def get_processed_image(id, ext):
 @app.route('/hide', methods=['POST'])
 def hide():
     if 'file' not in request.files:
-        return 'y no file'
+        return {
+            'message': 'no file uploaded'
+        }, 400
     
     file = request.files['file']
 
