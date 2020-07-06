@@ -9,6 +9,7 @@ import imghdr
 from werkzeug.utils import secure_filename
 
 from hide_faces import hide_faces
+import configs 
 
 
 cascades = [
@@ -19,9 +20,7 @@ cascades = [
 
 
 app = Flask(__name__)
-app.config['TEMP_FOLDER'] = 'tmp_data/'
-app.config['OUTPUT_FOLDER'] = 'out/'
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///hidden_faces.db"
+app.config.from_object('configs.ProductionConfig')
 db = SQLAlchemy(app)
 
 class ProcessedImage(db.Model):
